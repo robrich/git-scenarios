@@ -1,0 +1,680 @@
+Git Scenarios: How do I fix that?
+=================================
+
+[Rob Richardson](https://robrich.org/about)
+[@rob_rich](https://twitter.com/rob_rich)
+[ConFoo 2017 Montreal](https://confoo.ca/en/yul2017/session/git-scenarios-how-do-i-fix-that)
+
+
+Scenarios
+---------
+
+reflog
+rebase, why do I hate thee
+removing a commit
+- from the end
+- from the middle
+split a repository in half
+move a commit into another branch
+cherry-pick
+git bisect
+
+command line
+source-tree
+smart git
+
+
+History
+-------
+
+```bat
+C:\Users\Rob\Desktop\git-scenarios>git init
+Initialized empty Git repository in C:/Users/Rob/Desktop/git-scenarios/.git/
+
+C:\Users\Rob\Desktop\git-scenarios>echo "file1" > file1.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git add file1.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git commit -m "initial commit"
+[master (root-commit) c4dddc9] initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 file1.txt
+
+C:\Users\Rob\Desktop\git-scenarios>echo "file2" > file2.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git add file2.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git commit -m "file2"
+[master f5b381d] file2
+ 1 file changed, 1 insertion(+)
+ create mode 100644 file2.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git log
+commit f5b381dd5eb8311da31c400170a01448feb13807
+Author: Rob Richardson <robrich@robrich.org>
+Date:   Thu Mar 9 12:03:07 2017 -0700
+
+    file2
+
+commit c4dddc94382651c5f7c0943ba8209a183e3b0e0f
+Author: Rob Richardson <robrich@robrich.org>
+Date:   Thu Mar 9 12:02:44 2017 -0700
+
+    initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline
+f5b381d file2
+c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline
+f5b381d file2
+c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>echo "file3" > file3.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git add file3.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git commit -m "file3"
+[master 385927b] file3
+ 1 file changed, 1 insertion(+)
+ create mode 100644 file3.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline
+385927b file3
+f5b381d file2
+c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph
+* 385927b file3
+* f5b381d file2
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate
+* 385927b (HEAD -> master) file3
+* f5b381d file2
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout -b mybranch
+Switched to a new branch 'mybranch'
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate
+* 385927b (HEAD -> mybranch, master) file3
+* f5b381d file2
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>echo "file4" > file2.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git add file2.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git commit -m "file2 is file4"
+[mybranch c5f449a] file2 is file4
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate
+* c5f449a (HEAD -> mybranch) file2 is file4
+* 385927b (master) file3
+* f5b381d file2
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout c4dddc9
+Note: checking out 'c4dddc9'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b <new-branch-name>
+
+HEAD is now at c4dddc9... initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout -b mynewbranch
+Switched to a new branch 'mynewbranch'
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate
+* c4dddc9 (HEAD -> mynewbranch) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* c5f449a (mybranch) file2 is file4
+* 385927b (master) file3
+* f5b381d file2
+* c4dddc9 (HEAD -> mynewbranch) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git cherry-pick c5f449a
+error: could not apply c5f449a... file2 is file4
+hint: after resolving the conflicts, mark the corrected paths
+hint: with 'git add <paths>' or 'git rm <paths>'
+hint: and commit the result with 'git commit'
+
+C:\Users\Rob\Desktop\git-scenarios>git reset --hard
+HEAD is now at c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* c5f449a (mybranch) file2 is file4
+* 385927b (master) file3
+* f5b381d file2
+* c4dddc9 (HEAD -> mynewbranch) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git cherry-pick 385927b
+[mynewbranch 3681303] file3
+ Date: Thu Mar 9 12:05:35 2017 -0700
+ 1 file changed, 1 insertion(+)
+ create mode 100644 file3.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 3681303 (HEAD -> mynewbranch) file3
+| * c5f449a (mybranch) file2 is file4
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout c4dddc9
+Note: checking out 'c4dddc9'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b <new-branch-name>
+
+HEAD is now at c4dddc9... initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout -b mybranch
+fatal: A branch named 'mybranch' already exists.
+
+C:\Users\Rob\Desktop\git-scenarios>git update-ref refs/heads/mybranch HEAD
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 3681303 (mynewbranch) file3
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 (HEAD, mybranch) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git reflog
+c4dddc9 HEAD@{0}: checkout: moving from mynewbranch to c4dddc9
+3681303 HEAD@{1}: cherry-pick: file3
+c4dddc9 HEAD@{2}: reset: moving to HEAD
+c4dddc9 HEAD@{3}: checkout: moving from c4dddc94382651c5f7c0943ba8209a183e3b0e0f to mynewbranch
+c4dddc9 HEAD@{4}: checkout: moving from mybranch to c4dddc9
+c5f449a HEAD@{5}: commit: file2 is file4
+385927b HEAD@{6}: checkout: moving from master to mybranch
+385927b HEAD@{7}: commit: file3
+f5b381d HEAD@{8}: commit: file2
+c4dddc9 HEAD@{9}: commit (initial): initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>explorer .
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 3681303 (mynewbranch) file3
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 (HEAD, mybranch) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git cherry-pick c5f449a
+error: could not apply c5f449a... file2 is file4
+hint: after resolving the conflicts, mark the corrected paths
+hint: with 'git add <paths>' or 'git rm <paths>'
+hint: and commit the result with 'git commit'
+
+C:\Users\Rob\Desktop\git-scenarios>git mergetool
+Merging:
+file2.txt
+
+Deleted merge conflict for 'file2.txt':
+  {local}: deleted
+  {remote}: modified file
+Use (m)odified or (d)eleted file, or (a)bort? m
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 3681303 (mynewbranch) file3
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 (HEAD, mybranch) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git commit -m "file4"
+[detached HEAD 9476bfd] file4
+ Date: Thu Mar 9 12:07:40 2017 -0700
+ 1 file changed, 1 insertion(+)
+ create mode 100644 file2.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 9476bfd (HEAD) file4
+| * 3681303 (mynewbranch) file3
+|/
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 (mybranch) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git update-ref refs/heads/mybranch 9476bfd
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 9476bfd (HEAD, mybranch) file4
+| * 3681303 (mynewbranch) file3
+|/
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout mybranch
+Switched to branch 'mybranch'
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 9476bfd (HEAD -> mybranch) file4
+| * 3681303 (mynewbranch) file3
+|/
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git merge master
+Auto-merging file2.txt
+CONFLICT (add/add): Merge conflict in file2.txt
+Automatic merge failed; fix conflicts and then commit the result.
+
+C:\Users\Rob\Desktop\git-scenarios>git mergetool
+Merging:
+file2.txt
+
+Normal merge conflict for 'file2.txt':
+  {local}: created file
+  {remote}: created file
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 9476bfd (HEAD -> mybranch) file4
+| * 3681303 (mynewbranch) file3
+|/
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git commit -m "merge"
+[mybranch 7e04142] merge
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+*   7e04142 (HEAD -> mybranch) merge
+|\
+| * 385927b (master) file3
+| * f5b381d file2
+* | 9476bfd file4
+|/
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git reset 9476bfd
+Unstaged changes after reset:
+M       file2.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 9476bfd (HEAD -> mybranch) file4
+| * 3681303 (mynewbranch) file3
+|/
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git rebase master
+Cannot rebase: You have unstaged changes.
+Please commit or stash them.
+
+C:\Users\Rob\Desktop\git-scenarios>git statsu
+git: 'statsu' is not a git command. See 'git --help'.
+
+Did you mean this?
+        status
+
+C:\Users\Rob\Desktop\git-scenarios>git status
+On branch mybranch
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   file2.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        file2.txt.orig
+        file3.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+C:\Users\Rob\Desktop\git-scenarios>git reset --hard
+HEAD is now at 9476bfd file4
+
+C:\Users\Rob\Desktop\git-scenarios>git status
+On branch mybranch
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        file2.txt.orig
+        file3.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+C:\Users\Rob\Desktop\git-scenarios>git status
+On branch mybranch
+nothing to commit, working tree clean
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 9476bfd (HEAD -> mybranch) file4
+| * 3681303 (mynewbranch) file3
+|/
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>echo "file5" > file5.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git add file5.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git commit -m "file5"
+[mybranch 0a391cb] file5
+ 1 file changed, 1 insertion(+)
+ create mode 100644 file5.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 0a391cb (HEAD -> mybranch) file5
+* 9476bfd file4
+| * 3681303 (mynewbranch) file3
+|/
+| * 385927b (master) file3
+| * f5b381d file2
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git rebase master
+First, rewinding head to replay your work on top of it...
+Applying: file4
+Using index info to reconstruct a base tree...
+.git/rebase-apply/patch:7: trailing whitespace.
+"file4"
+warning: 1 line adds whitespace errors.
+Falling back to patching base and 3-way merge...
+Auto-merging file2.txt
+CONFLICT (add/add): Merge conflict in file2.txt
+error: Failed to merge in the changes.
+Patch failed at 0001 file4
+The copy of the patch that failed is found in: .git/rebase-apply/patch
+
+When you have resolved this problem, run "git rebase --continue".
+If you prefer to skip this patch, run "git rebase --skip" instead.
+To check out the original branch and stop rebasing, run "git rebase --abort".
+
+
+C:\Users\Rob\Desktop\git-scenarios>git mergetool
+Merging:
+file2.txt
+
+Normal merge conflict for 'file2.txt':
+  {local}: created file
+  {remote}: created file
+
+C:\Users\Rob\Desktop\git-scenarios>git rebase --continue
+Applying: file4
+Applying: file5
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 2cee0b6 (HEAD -> mybranch) file5
+* 49ccf9e file4
+* 385927b (master) file3
+* f5b381d file2
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout master
+Switched to branch 'master'
+
+C:\Users\Rob\Desktop\git-scenarios>git merge mybranch
+Updating 385927b..2cee0b6
+Fast-forward
+ file2.txt | 1 +
+ file5.txt | 1 +
+ 2 files changed, 2 insertions(+)
+ create mode 100644 file5.txt
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 2cee0b6 (HEAD -> master, mybranch) file5
+* 49ccf9e file4
+* 385927b file3
+* f5b381d file2
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git rebase -i c4dddc9
+Successfully rebased and updated refs/heads/master.
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate
+* 51cac1b (HEAD -> master) file4
+* 3ae2846 file5
+* f65aa23 file2
+* eecc0a9 file3
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git rebase -i c4dddc9
+[detached HEAD d795c34] I created a lot of files
+ Date: Thu Mar 9 12:05:35 2017 -0700
+ 3 files changed, 4 insertions(+)
+ create mode 100644 file2.txt
+ create mode 100644 file3.txt
+ create mode 100644 file5.txt
+Successfully rebased and updated refs/heads/master.
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate
+* d795c34 (HEAD -> master) I created a lot of files
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* d795c34 (HEAD -> master) I created a lot of files
+| * 2cee0b6 (mybranch) file5
+| * 49ccf9e file4
+| * 385927b file3
+| * f5b381d file2
+|/
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout mybranch
+Switched to branch 'mybranch'
+
+C:\Users\Rob\Desktop\git-scenarios>git update-ref refs/heads/master HEAD
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 2cee0b6 (HEAD -> mybranch, master) file5
+* 49ccf9e file4
+* 385927b file3
+* f5b381d file2
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git rebase -i c4dddc9
+CONFLICT (modify/delete): file2.txt deleted in HEAD and modified in 49ccf9e... file4. Version 49ccf9e... file4 of file2.txt left in tree.
+error: could not apply 49ccf9e... file4
+
+When you have resolved this problem, run "git rebase --continue".
+If you prefer to skip this patch, run "git rebase --skip" instead.
+To check out the original branch and stop rebasing, run "git rebase --abort".
+
+Could not apply 49ccf9e... file4
+
+C:\Users\Rob\Desktop\git-scenarios>git mergetool
+Merging:
+file2.txt
+
+Deleted merge conflict for 'file2.txt':
+  {local}: deleted
+  {remote}: modified file
+Use (m)odified or (d)eleted file, or (a)bort? d
+
+C:\Users\Rob\Desktop\git-scenarios>git rebase --continue
+Successfully rebased and updated refs/heads/mybranch.
+
+C:\Users\Rob\Desktop\git-scenarios>git log --oneline --graph --decorate --all
+* 4535443 (HEAD -> mybranch) file3
+| * 2cee0b6 (master) file5
+| * 49ccf9e file4
+| * 385927b file3
+| * f5b381d file2
+|/
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout master
+Switched to branch 'master'
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout -b bad
+Switched to a new branch 'bad'
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout c4dddc9
+Note: checking out 'c4dddc9'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b <new-branch-name>
+
+HEAD is now at c4dddc9... initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout -b good
+Switched to a new branch 'good'
+
+C:\Users\Rob\Desktop\git-scenarios>git hist --all
+* 4535443 (mybranch) file3
+| * 2cee0b6 (master, bad) file5
+| * 49ccf9e file4
+| * 385927b file3
+| * f5b381d file2
+|/
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 (HEAD -> good) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout c4dddc9
+Note: checking out 'c4dddc9'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b <new-branch-name>
+
+HEAD is now at c4dddc9... initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git hist
+* 4535443 (mybranch) file3
+| * 2cee0b6 (master, bad) file5
+| * 49ccf9e file4
+| * 385927b file3
+| * f5b381d file2
+|/
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 (HEAD, good) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git reset --hard
+HEAD is now at c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout 385927b
+Previous HEAD position was c4dddc9... initial commit
+HEAD is now at 385927b... file3
+
+C:\Users\Rob\Desktop\git-scenarios>git hist --all
+* 4535443 (mybranch) file3
+| * 2cee0b6 (master, bad) file5
+| * 49ccf9e file4
+| * 385927b (HEAD) file3
+| * f5b381d file2
+|/
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 (good) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git update-ref refs/heads/bad HEAD
+
+C:\Users\Rob\Desktop\git-scenarios>git checkout f5b381d
+Previous HEAD position was 385927b... file3
+HEAD is now at f5b381d... file2
+
+C:\Users\Rob\Desktop\git-scenarios>git hist
+* 4535443 (mybranch) file3
+| * 2cee0b6 (master) file5
+| * 49ccf9e file4
+| * 385927b (bad) file3
+| * f5b381d (HEAD) file2
+|/
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 (good) initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>git update-ref refs/heads/good HEAD
+
+C:\Users\Rob\Desktop\git-scenarios>git hist
+* 4535443 (mybranch) file3
+| * 2cee0b6 (master) file5
+| * 49ccf9e file4
+| * 385927b (bad) file3
+| * f5b381d (HEAD, good) file2
+|/
+| * 3681303 (mynewbranch) file3
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\git-scenarios>cd ..
+
+C:\Users\Rob\Desktop>mkdir newrepo
+
+C:\Users\Rob\Desktop>cd newrepo
+
+C:\Users\Rob\Desktop\newrepo>git clone ..\git-scenarios
+Cloning into 'git-scenarios'...
+done.
+
+C:\Users\Rob\Desktop\newrepo>git hist -20
+fatal: Not a git repository (or any of the parent directories): .git
+
+C:\Users\Rob\Desktop\newrepo>cd git-scenarios
+
+C:\Users\Rob\Desktop\newrepo\git-scenarios>git hist
+* 4535443 (origin/mybranch) file3
+| * 2cee0b6 (origin/master) file5
+| * 49ccf9e file4
+| * 385927b (origin/bad) file3
+| * f5b381d (HEAD -> good, origin/good, origin/HEAD) file2
+|/
+| * 3681303 (origin/mynewbranch) file3
+|/
+* c4dddc9 initial commit
+
+C:\Users\Rob\Desktop\newrepo\git-scenarios>git checkout master
+Branch master set up to track remote branch master from origin.
+Switched to a new branch 'master'
+
+C:\Users\Rob\Desktop\newrepo\git-scenarios>git rebase -i
+```
